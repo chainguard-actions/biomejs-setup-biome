@@ -1,0 +1,56 @@
+name: Test version detection from npm lockfile
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create package.json and package-lock.json with pinned biome version
+        run: |
+          mkdir -p /tmp/test-project
+          cat > /tmp/test-project/package.json <<'EOF'
+          {
+            "name": "test-project",
+            "devDependencies": {
+              "@biomejs/biome": "1.9.4"
+            }
+          }
+          EOF
+          cat > /tmp/test-project/package-lock.json <<'EOF'
+          {
+            "name": "test-project",
+            "lockfileVersion": 3,
+            "packages": {
+              "node_modules/@biomejs/biome": {
+                "version": "1.9.4"
+              }
+            }
+          }
+          EOF
+
+      - id: setup-biome
+        uses: .
+        with:
+          working-dir: /tmp/test-project
+
+      - name: Assert biome is installed and on PATH
+        run: |
+          echo "Checking biome is available..."
+          which biome || { echo "FAIL: biome not found on PATH"; exit 1; }
+          echo "PASS: biome found on PATH"
+
+      - name: Assert biome version matches lockfile
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          echo "actual version output: $ACTUAL_VERSION"
+          if echo "$ACTUAL_VERSION" | grep -q "1.9.4"; then
+            echo "PASS: biome version 1.9.4 installed from lockfile"
+          else
+            echo "FAIL: expected version 1.9.4 from lockfile but got: $ACTUAL_VERSION"
+            exit 1
+          fi
