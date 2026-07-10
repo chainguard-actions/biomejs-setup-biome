@@ -1,0 +1,47 @@
+name: Test working-dir version detection
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create fixture project with pinned Biome version
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/working-dir-project"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/working-dir-project/package.json" <<'EOF'
+          {
+            "name": "test-project",
+            "devDependencies": {
+              "@biomejs/biome": "1.9.3"
+            }
+          }
+          EOF
+
+      - id: setup
+        uses: .
+        with:
+          working-dir: "tests/fixtures/working-dir-project"
+
+      - name: Assert biome is in PATH
+        run: |
+          if ! command -v biome &>/dev/null; then
+            echo "FAIL: biome not found in PATH"
+            exit 1
+          fi
+          echo "PASS: biome found at $(command -v biome)"
+
+      - name: Assert biome version matches package.json pin
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          echo "actual version output: $ACTUAL_VERSION"
+          if echo "$ACTUAL_VERSION" | grep -q "1.9.3"; then
+            echo "PASS: version 1.9.3 confirmed from working-dir"
+          else
+            echo "FAIL: expected version 1.9.3 but got: $ACTUAL_VERSION"
+            exit 1
+          fi
