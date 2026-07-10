@@ -1,0 +1,65 @@
+name: Test version detection from npm lockfile
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create package-lock.json with pinned biome version
+        run: |
+          mkdir -p /tmp/test-lockfile-project
+          cat > /tmp/test-lockfile-project/package-lock.json <<'EOF'
+          {
+            "name": "test-lockfile-project",
+            "version": "1.0.0",
+            "lockfileVersion": 3,
+            "requires": true,
+            "packages": {
+              "": {
+                "name": "test-lockfile-project",
+                "version": "1.0.0",
+                "devDependencies": {
+                  "@biomejs/biome": "1.8.3"
+                }
+              },
+              "node_modules/@biomejs/biome": {
+                "version": "1.8.3",
+                "resolved": "https://registry.npmjs.org/@biomejs/biome/-/biome-1.8.3.tgz",
+                "dev": true
+              }
+            }
+          }
+          EOF
+          echo "Created package-lock.json:"
+          cat /tmp/test-lockfile-project/package-lock.json
+
+      - name: Setup Biome with version from npm lockfile
+        id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          working-dir: /tmp/test-lockfile-project
+
+      - name: Assert biome is available in PATH
+        run: |
+          echo "Checking biome is in PATH..."
+          if ! command -v biome &>/dev/null; then
+            echo "FAIL: biome command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: biome found at $(command -v biome)"
+
+      - name: Assert biome version matches lockfile version
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          echo "actual version output: $ACTUAL_VERSION"
+          if ! echo "$ACTUAL_VERSION" | grep -q "1.8.3"; then
+            echo "FAIL: expected version 1.8.3 (from package-lock.json) but got: $ACTUAL_VERSION"
+            exit 1
+          fi
+          echo "PASS: biome version 1.8.3 confirmed (detected from package-lock.json)"

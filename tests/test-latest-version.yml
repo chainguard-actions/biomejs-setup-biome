@@ -1,0 +1,46 @@
+name: Test latest version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Biome with latest version
+        id: action
+        uses: .
+        with:
+          version: "latest"
+          token: ${{ github.token }}
+
+      - name: Assert biome is available in PATH
+        run: |
+          echo "Checking biome is in PATH..."
+          if ! command -v biome &>/dev/null; then
+            echo "FAIL: biome command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: biome found at $(command -v biome)"
+
+      - name: Assert biome outputs a version string
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          echo "actual version output: $ACTUAL_VERSION"
+          if [ -z "$ACTUAL_VERSION" ]; then
+            echo "FAIL: biome --version returned empty output"
+            exit 1
+          fi
+          echo "PASS: biome version output: $ACTUAL_VERSION"
+
+      - name: Assert biome can run help
+        run: |
+          echo "Running biome --help..."
+          if ! biome --help &>/dev/null; then
+            echo "FAIL: biome --help failed"
+            exit 1
+          fi
+          echo "PASS: biome --help succeeded"
