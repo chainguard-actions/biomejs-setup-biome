@@ -1,0 +1,48 @@
+name: Update README.md Package Versions
+on:
+  schedule:
+    - cron: "0 0 * * 0" # every Sunday at 00:00
+  workflow_dispatch:
+
+jobs:
+  update-readme-package-versions:
+    runs-on: depot-ubuntu-24.04-arm-16
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@b7a1c7ccf290d58743029c4f6903da283811b979 # v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install dependencies
+        run: bun i
+
+      - name: Update README.md package Versions
+        id: update-readme-package-versions
+        run: |
+          bun scripts/update-readme-package-versions.ts
+
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update package versions in README.md"
+          committer: GitHub Actions Bot <actions@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          branch: update-readme-package-versions
+          delete-branch: true
+          title: "chore: update package versions in README.md"
+          body: |
+            This PR updates the biome package version in README.md to the latest version.
+          add-paths: README.md
+
+      - name: Auto-merge Pull Request
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.pull-request-number }}
+        run: gh pr merge --squash --auto "$PR_NUMBER"
