@@ -1,0 +1,38 @@
+name: Test setup-biome with working-dir lockfile detection
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create package.json with biome version pinned
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures/working-dir"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/working-dir/package.json" <<'EOF'
+          {
+            "devDependencies": {
+              "@biomejs/biome": "1.8.3"
+            }
+          }
+          EOF
+      - id: setup
+        name: Setup Biome using working-dir
+        uses: .
+        with:
+          working-dir: "tests/fixtures/working-dir"
+      - name: Assert biome is on PATH
+        run: |
+          echo "Checking biome is available..."
+          which biome || { echo "FAIL: biome not found on PATH"; exit 1; }
+          echo "PASS: biome found at $(which biome)"
+      - name: Assert biome version matches lockfile
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1)
+          echo "actual version output: $ACTUAL_VERSION"
+          if echo "$ACTUAL_VERSION" | grep -q "1.8.3"; then
+            echo "PASS: version 1.8.3 found (from lockfile)"
+          else
+            echo "FAIL: expected version 1.8.3 but got: $ACTUAL_VERSION"
+            exit 1
+          fi

@@ -37,9 +37,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: 1.5.1" == "$BIOME_VERSION" ]; then
+          if [ "Version: 1.5.1" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -68,9 +68,9 @@ jobs:
         shell: bash
         env:
           BIOME_EXPECTED_VERSION: 1.9.5-nightly.81fdedb
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -98,9 +98,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -128,9 +128,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -158,9 +158,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -188,9 +188,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -218,9 +218,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: $BIOME_EXPECTED_VERSION" == "$BIOME_VERSION" ]; then
+          if [ "Version: $BIOME_EXPECTED_VERSION" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"
@@ -267,9 +267,9 @@ jobs:
       - name: Check equality
         shell: bash
         env:
-          BIOME_VERSION: ${{ steps.version.outputs.version }}
+          ACTUAL_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if [ "Version: 2.0.0-beta.1" == "$BIOME_VERSION" ]; then
+          if [ "Version: 2.0.0-beta.1" == "$ACTUAL_VERSION" ]; then
             exit 0
           else
             echo "Versions do not match"

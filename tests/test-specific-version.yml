@@ -1,32 +1,27 @@
-name: Test specific version installation
+name: Test setup-biome with specific version
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - id: setup-biome
+      - id: setup
+        name: Setup Biome with specific version
         uses: .
         with:
           version: "1.9.4"
-
-      - name: Assert biome is installed and on PATH
+      - name: Assert biome is on PATH
         run: |
           echo "Checking biome is available..."
           which biome || { echo "FAIL: biome not found on PATH"; exit 1; }
-          echo "PASS: biome found on PATH"
-
-      - name: Assert biome version is correct
+          echo "PASS: biome found at $(which biome)"
+      - name: Assert biome version matches
         run: |
-          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          ACTUAL_VERSION=$(biome --version 2>&1)
           echo "actual version output: $ACTUAL_VERSION"
           if echo "$ACTUAL_VERSION" | grep -q "1.9.4"; then
-            echo "PASS: biome version 1.9.4 installed"
+            echo "PASS: version 1.9.4 found"
           else
             echo "FAIL: expected version 1.9.4 but got: $ACTUAL_VERSION"
             exit 1

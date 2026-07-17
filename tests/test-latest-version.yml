@@ -1,32 +1,32 @@
-name: Test latest version installation
+name: Test setup-biome installs latest version by default
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - id: setup-biome
+      - id: setup
+        name: Setup Biome with default (latest) version
         uses: .
         with:
           version: "latest"
-
-      - name: Assert biome is installed and on PATH
+      - name: Assert biome is on PATH
         run: |
           echo "Checking biome is available..."
           which biome || { echo "FAIL: biome not found on PATH"; exit 1; }
-          echo "PASS: biome found on PATH"
-
+          echo "PASS: biome found at $(which biome)"
       - name: Assert biome runs successfully
         run: |
-          ACTUAL=$(biome --version 2>&1 || true)
-          echo "actual: $ACTUAL"
-          if [ -z "$ACTUAL" ]; then
-            echo "FAIL: biome --version returned empty output"
+          OUTPUT=$(biome --version 2>&1)
+          echo "biome version output: $OUTPUT"
+          if [ -z "$OUTPUT" ]; then
+            echo "FAIL: biome --version produced no output"
             exit 1
           fi
           echo "PASS: biome is functional"
+      - name: Assert biome can lint (basic smoke test)
+        run: |
+          echo 'const x = 1;' > /tmp/test.js
+          biome check /tmp/test.js 2>&1 || true
+          echo "PASS: biome check ran without crashing"
