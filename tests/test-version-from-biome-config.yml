@@ -1,0 +1,45 @@
+name: Test version detection from biome.json config file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create project directory with biome.json
+        run: |
+          mkdir -p /tmp/test-biome-config
+          cat > /tmp/test-biome-config/biome.json <<'EOF'
+          {
+            "$schema": "https://biomejs.dev/schemas/1.7.3/schema.json",
+            "organizeImports": {
+              "enabled": true
+            },
+            "linter": {
+              "enabled": true
+            }
+          }
+          EOF
+          echo "Created biome.json with schema version 1.7.3"
+      - id: setup-biome
+        uses: .
+        with:
+          working-dir: /tmp/test-biome-config
+      - name: Assert biome is on PATH
+        run: |
+          echo "Checking biome is available on PATH..."
+          if ! command -v biome &>/dev/null; then
+            echo "FAIL: biome command not found on PATH"
+            exit 1
+          fi
+          echo "PASS: biome found at $(command -v biome)"
+      - name: Assert biome version matches biome.json schema
+        run: |
+          VERSION_OUTPUT=$(biome --version 2>&1)
+          echo "actual: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -q "1.7.3"; then
+            echo "PASS: biome version 1.7.3 confirmed (from biome.json schema)"
+          else
+            echo "FAIL: expected version 1.7.3 but got: $VERSION_OUTPUT"
+            exit 1
+          fi
