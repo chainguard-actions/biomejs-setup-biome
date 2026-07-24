@@ -8,51 +8,44 @@
 
 **Test Policy SHA:** `843adf9e4b8f85d0c08b27b9d0b09dd094b54702`
 
-**Harden Agent Version:** `1`
+**Harden Agent Version:** `2`
 
-Action **biomejs--setup-biome/v2.7.1** was hardened automatically. 4 finding(s) were identified and resolved across 1 iteration(s).
+Action **biomejs--setup-biome/v2.7.1** was hardened automatically. 3 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### missing-permissions (severity: medium)
 
-The workflow file has no top-level 'permissions:' key and no job-level 'permissions:' keys on any of its jobs (build, coding-standards). Without explicit permissions, the GITHUB_TOKEN is granted default (potentially write) permissions, violating least-privilege.
+The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions, which may be overly broad.
 
 Locations:
 
 - `.github/workflows/integrate.yaml:1`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level 'permissions:' key and no job-level 'permissions:' keys on any of its many jobs (test-specific, test-npm, test-pnpm, test-pnpm-9, test-pnpm-workspace-root, test-pnpm-workspace-default-catalog, test-pnpm-workspace-named-catalog, test-yarn, test-bun, test-bun-with-text-lockfile, test-from-biome-json, test-from-biome-jsonc, test-fallback-latest, test-prerelease). Without explicit permissions, the GITHUB_TOKEN is granted default (potentially write) permissions.
-
-Locations:
-
 - `.github/workflows/test.yaml:1`
 
 ### script-injection (severity: high)
 
-Rule (a): Multiple 'Check equality' steps interpolate ${{ steps.version.outputs.version }} and ${{ env.BIOME_EXPECTED_VERSION }} directly inside run: shell scripts. These expressions are substituted by the Actions template engine before the shell sees the command, allowing an attacker who controls the step output or env value to inject arbitrary shell commands. Example offending lines: `if [ "Version: 2.0.0" == "${{ steps.version.outputs.version }}" ]` and `if [ "Version: ${{ env.BIOME_EXPECTED_VERSION }}" == "${{ steps.version.outputs.version }}" ]`. Fix: pass values via env: variables and reference them as quoted shell variables (e.g., "$STEP_OUTPUT").
+Sub-rule (a): GitHub Actions expressions are interpolated directly inside `run:` shell command strings. In test.yaml, every 'Check equality' step uses `${{ steps.version.outputs.version }}` and/or `${{ env.BIOME_EXPECTED_VERSION }}` directly in shell `if` comparisons (e.g. `if [ "Version: 2.0.0" == "${{ steps.version.outputs.version }}" ]`). The `steps.*.outputs.*` and `env.*` contexts flow through YAML template substitution before the shell sees them, making them vulnerable to injection if the values contain shell metacharacters. All 13 'Check equality' steps across jobs test-specific, test-npm, test-pnpm, test-pnpm-9, test-pnpm-workspace-root, test-pnpm-workspace-default-catalog, test-pnpm-workspace-named-catalog, test-yarn, test-bun, test-bun-with-text-lockfile, test-from-biome-json, test-from-biome-jsonc, and test-prerelease are affected.
 
 Locations:
 
-- `.github/workflows/test.yaml:33`
-- `.github/workflows/test.yaml:57`
-- `.github/workflows/test.yaml:80`
-- `.github/workflows/test.yaml:103`
-- `.github/workflows/test.yaml:126`
-- `.github/workflows/test.yaml:149`
-- `.github/workflows/test.yaml:172`
-- `.github/workflows/test.yaml:195`
-- `.github/workflows/test.yaml:218`
-- `.github/workflows/test.yaml:241`
-- `.github/workflows/test.yaml:264`
-- `.github/workflows/test.yaml:287`
-- `.github/workflows/test.yaml:318`
+- `.github/workflows/test.yaml:35`
+- `.github/workflows/test.yaml:63`
+- `.github/workflows/test.yaml:90`
+- `.github/workflows/test.yaml:118`
+- `.github/workflows/test.yaml:146`
+- `.github/workflows/test.yaml:174`
+- `.github/workflows/test.yaml:202`
+- `.github/workflows/test.yaml:230`
+- `.github/workflows/test.yaml:258`
+- `.github/workflows/test.yaml:286`
+- `.github/workflows/test.yaml:314`
+- `.github/workflows/test.yaml:342`
+- `.github/workflows/test.yaml:378`
 
 ### script-injection (severity: high)
 
-Rule (a): The 'Auto-merge Pull Request' step interpolates ${{ steps.pr.outputs.pull-request-number }} directly inside a run: shell command: `gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"`). The Actions template engine substitutes this value before the shell parses the command, so a malicious pull-request number value could inject shell commands. Fix: pass the value via an env: variable and reference it as a quoted shell variable.
+Sub-rule (a): In update-readme-package-version.yaml, the 'Auto-merge Pull Request' step directly interpolates `${{ steps.pr.outputs.pull-request-number }}` inside a `run:` shell command: `gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"`). The `steps.*.outputs.*` context is substituted by the YAML template engine before the shell processes the string, allowing injection if the output value contains shell metacharacters.
 
 Locations:
 
@@ -66,5 +59,11 @@ Locations:
 
 **Notes:**
 
-Fixed all four findings: (1) Added `permissions: {}` to integrate.yaml top-level; (2) Added `permissions: {}` to test.yaml top-level; (3) Fixed 13 script-injection instances in test.yaml by moving ${{ steps.version.outputs.version }} into env: BIOME_VERSION and referencing it as $BIOME_VERSION in run: blocks — the workflow-level BIOME_EXPECTED_VERSION is already a plain env var so it's safe to use directly in shell; (4) Fixed script-injection in update-readme-package-version.yaml by moving ${{ steps.pr.outputs.pull-request-number }} into env: PR_NUMBER and referencing it as "$PR_NUMBER" in the gh pr merge command.
+Fixed all three findings across three workflow files:
+
+1. integrate.yaml: Added `permissions: {}` top-level block.
+
+2. test.yaml: Added `permissions: {}` top-level block. Fixed all 13 'Check equality' steps by moving `${{ steps.version.outputs.version }}` into `env: ACTUAL_VERSION` and referencing it as `$ACTUAL_VERSION` in the shell script. For test-npm, also moved the step-level `${{ env.BIOME_EXPECTED_VERSION }}` reference to use the env var directly. The top-level `BIOME_EXPECTED_VERSION` env var is already available to all other jobs without needing expression interpolation in run blocks.
+
+3. update-readme-package-version.yaml: Fixed the 'Auto-merge Pull Request' step by moving `${{ steps.pr.outputs.pull-request-number }}` into `env: PR_NUMBER` and referencing it as `"$PR_NUMBER"` in the shell command.
 
