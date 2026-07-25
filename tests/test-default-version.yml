@@ -1,34 +1,26 @@
-name: Test default version install
+name: Test setup-biome with default version
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - id: setup
+      - id: action
         uses: .
         with:
           version: "latest"
-
-      - name: Assert biome is in PATH
+      - name: Assert biome is installed
         run: |
-          if ! command -v biome &>/dev/null; then
-            echo "FAIL: biome not found in PATH"
+          echo "Checking biome is on PATH..."
+          which biome || { echo "FAIL: biome not found on PATH"; exit 1; }
+          echo "PASS: biome found on PATH"
+      - name: Assert biome is executable and returns version
+        run: |
+          ACTUAL_VERSION=$(biome --version 2>&1 || true)
+          echo "actual version output: $ACTUAL_VERSION"
+          if [ -z "$ACTUAL_VERSION" ]; then
+            echo "FAIL: biome --version returned empty output"
             exit 1
           fi
-          echo "PASS: biome found at $(command -v biome)"
-
-      - name: Assert biome runs successfully
-        run: |
-          OUTPUT=$(biome --version 2>&1 || true)
-          echo "biome version output: $OUTPUT"
-          if [ -z "$OUTPUT" ]; then
-            echo "FAIL: biome --version produced no output"
-            exit 1
-          fi
-          echo "PASS: biome is functional"
+          echo "PASS: biome is executable and returned version: $ACTUAL_VERSION"
