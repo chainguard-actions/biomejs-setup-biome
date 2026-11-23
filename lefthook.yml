@@ -1,0 +1,7 @@
+pre-commit:
+  commands:
+    biome:
+      run: pnpm run check && git add .
+    package:
+      glob: src/**/*
+      run: pnpm run build && git add dist/*

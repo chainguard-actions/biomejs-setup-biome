@@ -1,17 +1,89 @@
-# biomejs/setup-biome
+# Setup Biome CLI in GitHub Actions
 
-Setup the Biome CLI in GitHub Actions
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/biomejs/setup-biome?label=latest&logo=github&labelColor=374151&color=60a5fa)](https://github.com/marketplace/actions/setup-biome)
+[![Test](https://github.com/biomejs/setup-biome/actions/workflows/test.yaml/badge.svg)](https://github.com/biomejs/setup-biome/actions/workflows/test.yaml)
+[![Integrate](https://github.com/biomejs/setup-biome/actions/workflows/integrate.yaml/badge.svg)](https://github.com/biomejs/setup-biome/actions/workflows/integrate.yaml)
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/biomejs/setup-biome](https://github.com/biomejs/setup-biome).
+**Setup Biome** is a GitHub action that provides a cross-platform interface
+for setting up the [Biome CLI](https://biomejs.dev) in GitHub
+Actions runners.
 
-## Versions
+## Inputs
 
-| Version | Tag | Upstream commit | Hardening report |
-|---------|-----|-----------------|------------------|
-| v2.5.1 | [`v2.5.1`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.5.1) | [`a9763ed`](https://github.com/biomejs/setup-biome/commit/a9763ed3d2388f5746f9dc3e1a55df7f4609bc89) | — |
-| v2.6.0 | [`v2.6.0`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.6.0) | [`454fa0d`](https://github.com/biomejs/setup-biome/commit/454fa0d884737805f48d7dc236c1761a0ac3cc13) | — |
-| v2.7.0 | [`v2.7.0`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.7.0) | [`29711cb`](https://github.com/biomejs/setup-biome/commit/29711cbb52afee00eb13aeb30636592f9edc0088) | [`HARDENING.md`](https://github.com/chainguard-actions/biomejs-setup-biome/blob/v2.7.0/HARDENING.md) |
-| v2.7.1 | [`v2.7.1`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.7.1) | [`4c91541`](https://github.com/biomejs/setup-biome/commit/4c91541eaada48f67d7dbd7833600ce162b68f51) | [`HARDENING.md`](https://github.com/chainguard-actions/biomejs-setup-biome/blob/v2.7.1/HARDENING.md) |
+The following inputs are supported.
+
+```yaml
+- name: Setup Biome
+  uses: biomejs/setup-biome@v2
+  with:
+    # The version of the Biome CLI to install.
+    # This input is optional and by default the version will be automatically
+    # detected from the project's dependencies. If no version is found in the
+    # project's dependencies, the latest version of the Biome CLI will be installed.
+    # Example values: "2.6.8", "latest"
+    version: ""
+
+    # The GitHub token to use to authenticate GitHub API requests.
+    # This input is optional and defaults to the job's GitHub token.
+    # Example value: ${{ secrets.GITHUB_TOKEN }}
+    token: ${{ github.token }}
+
+    # The directory in which the lockfile will be looked for when automatically
+    # determining the version of the Biome CLI to install. Defaults to the current
+    # working directory.
+    working-dir: ""
+```
+
+## Examples
+
+### Automatic version detection
+
+To automatically determine the Biome version to install, simply omit the `version` input.
+
+The action first looks for the version of the `@biomejs/biome` dependency in the lockfiles of popular package managers (npm, yarn, pnpm, bun). If no version can be determined from lockfiles, it will next check `package.json`. If neither lockfiles nor `package.json` provide a version, the action will then look for a declared version in the project's Biome configuration file (it extracts the version from the `$schema` field). If no version is found after these checks, the action installs the latest version of the Biome CLI.
+
+```yaml
+- name: Setup Biome CLI
+  uses: biomejs/setup-biome@v2
+
+- name: Run Biome
+  run: biome ci
+```
+
+> [!IMPORTANT]
+> We recommend that you _pin_ the version of `@biomejs/biome` in your project's dependencies. If you provide a semver range, and automatic version detection falls back to reading the `package.json file`, the highest version within the range will be used. See the [versioning documentation](https://biomejs.dev/internals/versioning/) for more information.
+
+### Latest version
+
+Setup the latest version of the Biome CLI.
+
+```yaml
+- name: Setup Biome CLI
+  uses: biomejs/setup-biome@v2
+  with:
+    version: latest
+
+- name: Run Biome
+  run: biome ci
+```
+
+### Specific version
+
+Install version `2.6.8` of the Biome CLI.
+
+```yaml
+- name: Setup Biome CLI
+  uses: biomejs/setup-biome@v2
+  with:
+    version: 2.6.8
+
+- name: Run Biome
+  run: biome ci
+```
+
+## License
+
+Copyright © 2023, Nicolas Hedger. Released under the [MIT License](LICENSE.md).
 
 ## Privacy
 
