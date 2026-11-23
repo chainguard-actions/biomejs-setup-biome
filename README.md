@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit | Hardening report |
 |---------|-----|-----------------|------------------|
+| v2 | [`v2`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2) | [`77af1e9`](https://github.com/biomejs/setup-biome/commit/77af1e9ce0cc32955e83b0c3e30c28ae3b81cab7) | [`HARDENING.md`](https://github.com/chainguard-actions/biomejs-setup-biome/blob/v2/HARDENING.md) |
 | v2.5.1 | [`v2.5.1`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.5.1) | [`a9763ed`](https://github.com/biomejs/setup-biome/commit/a9763ed3d2388f5746f9dc3e1a55df7f4609bc89) | — |
 | v2.6.0 | [`v2.6.0`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.6.0) | [`454fa0d`](https://github.com/biomejs/setup-biome/commit/454fa0d884737805f48d7dc236c1761a0ac3cc13) | — |
 | v2.7.0 | [`v2.7.0`](https://github.com/chainguard-actions/biomejs-setup-biome/tree/v2.7.0) | [`29711cb`](https://github.com/biomejs/setup-biome/commit/29711cbb52afee00eb13aeb30636592f9edc0088) | [`HARDENING.md`](https://github.com/chainguard-actions/biomejs-setup-biome/blob/v2.7.0/HARDENING.md) |
